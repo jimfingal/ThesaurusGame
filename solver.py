@@ -2,11 +2,11 @@ from collections import defaultdict, Counter
 
 class ThesaurusSolver(object):
     
-    def __init__(self, thesaurus):
-        self.forward_mapping, self.reverse_mapping, self.matchable_text = self.process_thesaurus(thesaurus)
-        
+    def __init__(self, text):
+        self.forward_mapping, self.reverse_mapping, self.matchable_text = self.process_thesaurus(text)
+        print self.matchable_text[:100]
+
     def process_thesaurus(self, thesaurus):
-    
         forward_mapping = defaultdict(set)
         reverse_mapping = defaultdict(set)
         
@@ -14,7 +14,7 @@ class ThesaurusSolver(object):
                 
         current_word = None
 
-        for i, line in enumerate(thesaurus.split('\r\n')):
+        for i, line in enumerate(thesaurus.split('\n')):
             if '        ' in line:
                 without_number = ' '.join(line.replace('        ', '').split()[:-1])
                 multiple_words = without_number.split(',')
@@ -31,13 +31,9 @@ class ThesaurusSolver(object):
         
 
     def solve_problem(self, match_regex, hints):
-        
-        print match_regex, hints
-        
         matches = match_regex.findall(self.matchable_text)
 
         score = Counter()
-        print matches
         for match in matches:
             for word in self.forward_mapping[match]:
                 #if word in hints:

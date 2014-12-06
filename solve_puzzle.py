@@ -17,11 +17,9 @@ def get_tweets(twitter):
     return list(map(lambda x: x['text'], timeline))
 
 def get_hint_and_related(tweet):
-    extract_data = re.compile('Hint: (?P<hint>.+)\\nRelated words are: (?P<related>.+)\.', re.IGNORECASE)
+    extract_data = re.compile('.*int. (?P<hint>.+)\n.+words are: (?P<related>.+)[\.]*', re.IGNORECASE)
     matches = extract_data.search(tweet)
-    
-    print tweet
-    
+        
     hint = matches.groupdict()['hint']
     hint = hint.encode('utf-8').replace('●', '.').replace(' ', '')
     hint_regex = ';(?P<name>' + hint + ');'    
@@ -35,12 +33,17 @@ def get_and_solve_tweet(twitter, solver):
     tweets = get_tweets(twitter)
     last_tweet = tweets[0]
     print "Last weet was: %s" % last_tweet 
+    print ""
     if 'Guess the word' in last_tweet:
         try:
             match_regex, related, hint_regex = get_hint_and_related(last_tweet)
-            print match_regex
-            print related
+ 
+            print "Hint Regex:"
             print hint_regex
+ 
+            print "Related:"
+            print related
+
             answers =  solver.solve_problem(match_regex, related)
             if len(answers) > 0:
                 return answers[0][0]
