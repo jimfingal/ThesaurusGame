@@ -31,8 +31,8 @@ def get_hint_and_related(tweet):
     
     return match_regex, related, hint_regex
 
-def get_and_solve_tweet(solver):
-    tweets = get_tweets()
+def get_and_solve_tweet(twitter, solver):
+    tweets = get_tweets(twitter)
     last_tweet = tweets[0]
     print "Last weet was: %s" % last_tweet 
     if 'Guess the word' in last_tweet:
@@ -75,5 +75,5 @@ if __name__ == "__main__":
         text = p.read_file().decode('utf-8')
 
     solver = ThesaurusSolver(text)
-    answers = get_and_solve_tweet(solver)
+    answers = get_and_solve_tweet(twitter, solver)
     print answers
