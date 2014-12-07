@@ -11,6 +11,7 @@ from thesaurus import get_thesaurus_text
 from solver import ThesaurusSolver
 
 SLEEP_MIN = os.environ.get('SOLVE_INTERVAL', 50)
+MY_NAME = 'wordchallenger'
 
 log_fmt = "%(levelname)-6s %(filename)-12s:%(lineno)-4d at %(asctime)s: %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=log_fmt)
@@ -58,6 +59,14 @@ def solve_problem_and_post_solution(twitter, solver):
     else:
         logging.info("No candidate answers")
         return False
+
+    favorite_winning_tweets(twitter, tweets)
+
+def favorite_winning_tweets(twitter, tweets):
+    for tweet_id, tweet_text, favorited in tweets:
+        if MY_NAME in tweet_text and not favorited:
+            twitter.create_favorite(id=tweet_id)
+            logging.info("Favoriting tweet: %s" % tweet_text)
 
 def get_and_solve_tweet(tweet_text, solver):
     

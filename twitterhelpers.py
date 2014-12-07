@@ -18,7 +18,7 @@ def get_twython():
 
 def get_tweets(twitter):
     timeline = twitter.get_user_timeline(screen_name=GAME_SCREEN_NAME)
-    return [(m['id'], m['text']) for m in timeline]
+    return [(m['id'], m['text'], m['favorited']) for m in timeline]
 
 def post_solution(twitter, in_reply_to, answer):
 
