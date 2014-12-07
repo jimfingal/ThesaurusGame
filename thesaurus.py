@@ -25,4 +25,7 @@ def get_thesaurus_text():
     else:
         logging.info("File exists, reading in")
         text = p.read_file().decode('utf-8')
+    
+    logging.info("Read text length: %s" % len(text))
+
     return text
