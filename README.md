@@ -15,4 +15,6 @@ It was relatively straightforward to parse the thesaurus and build forward and r
 * Go from this word to all first-order related words
 * Go from these to all second-order related words. If any of these is one of the hints, +1 score for this candidate
 
-At the end of the process, submit the candidate with the highest score. This doesn't always win when there are ambiguities, but is capable of guessing words correctly even when there are no letters in the suggestion.
+At the end of the process, submit the candidate with the highest score. This doesn't always win when there are multiple viable solutions, but is capable of guessing words correctly even when there are no letters in the suggestion.
+
+Because it wouldn't be fun if this just broke the game and solved every problem as soon as it was posted, I put some logic in to only try to answer questions once every hour, 12 hours a day. If the latest tweet was an announcement of a winner, it will skip trying to solve the problem.
