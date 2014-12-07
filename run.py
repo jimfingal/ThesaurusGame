@@ -3,7 +3,7 @@ import re
 import os
 import time
 import logging
-
+import click
 import arrow
 
 from twitterhelpers import get_twython, get_tweets, post_solution
@@ -16,7 +16,7 @@ MY_NAME = 'wordchallenger'
 log_fmt = "%(levelname)-6s %(filename)-12s:%(lineno)-4d at %(asctime)s: %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=log_fmt)
 
-def main_loop(twitter, solver):
+def main_loop(twitter, solver, commit=False):
     # Once per human-reasonable hour, attempt to solve.
 
     while True:
@@ -25,7 +25,7 @@ def main_loop(twitter, solver):
         if reasonable_human_hour(pac_time.hour):
             logging.info("Solving problem, it's a reasonable hour :: %s" % pac_time)
             try:
-                solve_problem_and_post_solution(twitter, solver)
+                solve_problem_and_post_solution(twitter, solver, commit)
             except Exception as e:
                 logging.exception(e)
         else:
@@ -39,13 +39,16 @@ def main_loop(twitter, solver):
 def reasonable_human_hour(pac_hour):
     return pac_hour >= 8 and pac_hour <= 20
 
-def solve_problem_and_post_solution(twitter, solver):
+def solve_problem_and_post_solution(twitter, solver, commit):
 
     tweets = get_tweets(twitter)
+
 
     if not tweets:
         logging.error("No tweets returned!")
         return
+
+    favorite_winning_tweets(twitter, tweets, commit=commit)
 
     last_tweet_id = tweets[0][0]
     last_tweet_text = tweets[0][1]
@@ -54,19 +57,26 @@ def solve_problem_and_post_solution(twitter, solver):
 
     if answer:
         logging.info("Candidate Answer: %s" % answer)
-        post_solution(twitter, last_tweet_id, answer)
+        post_solution(twitter, last_tweet_id, answer, commit=commit)
         return True
     else:
         logging.info("No candidate answers")
         return False
 
-    favorite_winning_tweets(twitter, tweets)
 
-def favorite_winning_tweets(twitter, tweets):
+def favorite_winning_tweets(twitter, tweets, commit):
     for tweet_id, tweet_text, favorited in tweets:
         if MY_NAME in tweet_text and not favorited:
-            twitter.create_favorite(id=tweet_id)
             logging.info("Favoriting tweet: %s" % tweet_text)
+            
+            if commit:
+                twitter.create_favorite(id=tweet_id)
+            else:
+                logging.info("Not committing")
+
+            logging.info("Sleeping a little...")
+            time.sleep(5) # Sleep a few seconds before posting again
+
 
 def get_and_solve_tweet(tweet_text, solver):
     
@@ -103,11 +113,27 @@ def get_hint_and_related(tweet):
     
     return match_regex, related, hint_regex_text
 
-if __name__ == "__main__":
+
+@click.command()
+@click.option('--oneoff',
+              default=False,
+              is_flag=True,
+              help='Run script as oneoff. Default is to run as loop.')
+@click.option('--commit',
+                default=False,
+                is_flag=True,
+                help='Whether to post to twitter.')
+def main(oneoff, commit):
     
     twitter = get_twython()
     text = get_thesaurus_text()
     solver = ThesaurusSolver(text)
 
-    main_loop(twitter, solver)
-    
+    if oneoff:
+        solve_problem_and_post_solution(twitter, solver, commit)
+    else:
+        main_loop(twitter, solver, commit=commit)
+
+if __name__ == "__main__":
+
+    main()

@@ -20,12 +20,15 @@ def get_tweets(twitter):
     timeline = twitter.get_user_timeline(screen_name=GAME_SCREEN_NAME)
     return [(m['id'], m['text'], m['favorited']) for m in timeline]
 
-def post_solution(twitter, in_reply_to, answer):
+def post_solution(twitter, in_reply_to, answer, commit=True):
 
     status = "@%s %s" % (GAME_SCREEN_NAME, answer)
 
     logging.info("Posting status: '%s', IRT %s" % (status, in_reply_to))
 
-    #twitter.update_status(
-    #	status=status, 
-    #	in_reply_to_status_id=in_reply_to)
+    if commit:
+    	twitter.update_status(
+	    	status=status, 
+	    	in_reply_to_status_id=in_reply_to)
+    else:
+    	logging.info("Not committig.")

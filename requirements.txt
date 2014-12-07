@@ -1,5 +1,6 @@
 Unipath==1.0
 arrow==0.4.4
+click==3.3
 oauthlib==0.7.2
 python-dateutil==2.3
 requests==2.5.0
