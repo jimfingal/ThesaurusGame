@@ -4,7 +4,6 @@ class ThesaurusSolver(object):
     
     def __init__(self, text):
         self.forward_mapping, self.reverse_mapping, self.matchable_text = self.process_thesaurus(text)
-        print self.matchable_text[:100]
 
     def process_thesaurus(self, thesaurus):
         forward_mapping = defaultdict(set)

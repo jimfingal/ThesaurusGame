@@ -1,20 +1,72 @@
 # -*- coding: utf-8 -*-
-from twython import Twython
 import re
-import requests
-import os
-from unipath import Path
+
+import arrow
+import time
+import logging
+
+from twitterhelpers import get_twython, get_tweets, post_solution
+from thesaurus import get_thesaurus_text
 from solver import ThesaurusSolver
 
-def get_thesaurus_text():
-    index_url = "http://www.gutenberg.org/cache/epub/10681/pg10681.txt"
-    index_text = requests.get(index_url).text
-    relevant_text = index_text[4764:2781002]
-    return relevant_text
+SLEEP_MIN = 45
 
-def get_tweets(twitter):
-    timeline = twitter.get_user_timeline(screen_name='ThesaurusGame')
-    return list(map(lambda x: x['text'], timeline))
+log_fmt = "%(levelname)-6s %(filename)-12s:%(lineno)-4d at %(asctime)s: %(message)s"
+logging.basicConfig(level=logging.DEBUG, format=log_fmt)
+
+
+def main_loop(twitter, solver):
+    # Once per human-reasonable hour, attempt to solve.
+
+    while True:
+        pac_time = arrow.utcnow().to('US/Pacific')
+
+        if reasonable_human_hour(pac_time.hour):
+            logging.info("Solving problem, it's a reasonable hour :: %s" % pac_time)
+            solve_problem_and_post_solution(twitter, solver)
+        else:
+            logging.info("If I was a human right now I'd be asleep. Don't try to solve.")
+
+        logging.info("Will try again in %s minutes" % SLEEP_MIN)
+        seconds_sleep = SLEEP_MIN * 60
+        time.sleep(seconds_sleep)
+        logging.info("Waking up.")
+
+def reasonable_human_hour(pac_hour):
+    return pac_hour > 8 and pac_hour < 18
+
+def solve_problem_and_post_solution(twitter, solver):
+    answer = get_and_solve_tweet(twitter, solver)
+
+    if answer:
+        logging.info("Candidate Answer: %s" % answer)
+        post_solution(twitter, answer)
+        return True
+    else:
+        logging.info("No candidate answers")
+        return False
+
+def get_and_solve_tweet(twitter, solver):
+    tweets = get_tweets(twitter)
+    last_tweet = tweets[0]
+    logging.info("Last tweet was: %s" % last_tweet)
+    if 'Guess the word' in last_tweet:
+        try:
+            match_regex, related, hint_regex = get_hint_and_related(last_tweet)
+ 
+            logging.debug("Hint Regex: %s" % hint_regex) 
+            logging.debug("Related Words: %s" % related) 
+
+            answers =  solver.solve_problem(match_regex, related)
+            logging.info("Possible answers: %s" % answers)
+            if len(answers) > 0:
+                return answers[0][0]
+            else:
+                return None
+        except Exception as e:
+            print e
+    else:
+        logging.info("No current Challenge: %s" % last_tweet)
 
 def get_hint_and_related(tweet):
     extract_data = re.compile('.*int. (?P<hint>.+)\n.+words are: (?P<related>.+)[\.]*', re.IGNORECASE)
@@ -29,54 +81,11 @@ def get_hint_and_related(tweet):
     
     return match_regex, related, hint_regex
 
-def get_and_solve_tweet(twitter, solver):
-    tweets = get_tweets(twitter)
-    last_tweet = tweets[0]
-    print "Last weet was: %s" % last_tweet 
-    print ""
-    if 'Guess the word' in last_tweet:
-        try:
-            match_regex, related, hint_regex = get_hint_and_related(last_tweet)
- 
-            print "Hint Regex:"
-            print hint_regex
- 
-            print "Related:"
-            print related
-
-            answers =  solver.solve_problem(match_regex, related)
-            if len(answers) > 0:
-                return answers[0][0]
-            else:
-                return None
-        except Exception as e:
-            print e
-    else:
-        print "No current Challenge: %s" % last_tweet
-
 if __name__ == "__main__":
-
-    consumer_key = os.environ.get('GENIUS_CONSUMER_KEY')
-    consumer_secret = os.environ.get('GENIUS_CONSUMER_SECRET')
-    access_token = os.environ.get('GENIUS_ACCESS_TOKEN')
-    access_token_secret = os.environ.get('GENIUS_ACCESS_TOKEN_SECRET')
-
-    twitter = Twython(consumer_key,
-                          consumer_secret,
-                          access_token,
-                          access_token_secret)
-
-
-    p = Path('thesaurus.txt')
-    text = None
-    if not p.exists():
-        print "File doesn't exist, parsing from internet"
-        text = get_thesaurus_text()
-        p.write_file(text.encode('utf-8'))
-    else:
-        print "File exists, reading in"
-        text = p.read_file().decode('utf-8')
-
+    
+    twitter = get_twython()
+    text = get_thesaurus_text()
     solver = ThesaurusSolver(text)
-    answers = get_and_solve_tweet(twitter, solver)
-    print answers
+
+    main_loop(twitter, solver)
+    
