@@ -33,7 +33,7 @@ def main_loop(twitter, solver):
         logging.info("Waking up.")
 
 def reasonable_human_hour(pac_hour):
-    return pac_hour > 8 and pac_hour < 18
+    return pac_hour >= 8 and pac_hour <= 20
 
 def solve_problem_and_post_solution(twitter, solver):
     answer = get_and_solve_tweet(twitter, solver)
