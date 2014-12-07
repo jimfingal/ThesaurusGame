@@ -12,7 +12,7 @@ def _retrieve_thesaurus_text():
     return relevant_text
 
 def get_thesaurus_text():
-    p = Path('thesaurus.txt')
+    p = Path('./thesaurus.txt')
     
     text = None
     
