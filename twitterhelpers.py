@@ -18,8 +18,14 @@ def get_twython():
 
 def get_tweets(twitter):
     timeline = twitter.get_user_timeline(screen_name=GAME_SCREEN_NAME)
-    return list(map(lambda x: x['text'], timeline))
+    return [(m['id'], m['text']) for m in timeline]
 
-def post_solution(twitter, answer):
-    logging.info("Posting solution.")
-    #twitter.send_direct_message(screen_name=GAME_SCREEN_NAME, text=answer)
+def post_solution(twitter, in_reply_to, answer):
+
+    status = "@%s %s" % (GAME_SCREEN_NAME, answer)
+
+    logging.info("Posting status: '%s', IRT %s" % (status, in_reply_to))
+
+    #twitter.update_status(
+    #	status=status, 
+    #	in_reply_to_status_id=in_reply_to)

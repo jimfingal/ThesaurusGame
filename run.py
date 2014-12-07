@@ -23,7 +23,10 @@ def main_loop(twitter, solver):
 
         if reasonable_human_hour(pac_time.hour):
             logging.info("Solving problem, it's a reasonable hour :: %s" % pac_time)
-            solve_problem_and_post_solution(twitter, solver)
+            try:
+                solve_problem_and_post_solution(twitter, solver)
+            except Exception as e:
+                logging.exception(e)
         else:
             logging.info("If I was a human right now I'd be asleep. Don't try to solve.")
 
@@ -36,37 +39,43 @@ def reasonable_human_hour(pac_hour):
     return pac_hour >= 8 and pac_hour <= 20
 
 def solve_problem_and_post_solution(twitter, solver):
-    answer = get_and_solve_tweet(twitter, solver)
+
+    tweets = get_tweets(twitter)
+
+    if not tweets:
+        logging.error("No tweets returned!")
+        return
+
+    last_tweet_id = tweets[0][0]
+    last_tweet_text = tweets[0][1]
+
+    answer = get_and_solve_tweet(last_tweet_text, solver)
 
     if answer:
         logging.info("Candidate Answer: %s" % answer)
-        post_solution(twitter, answer)
+        post_solution(twitter, last_tweet_id, answer)
         return True
     else:
         logging.info("No candidate answers")
         return False
 
-def get_and_solve_tweet(twitter, solver):
-    tweets = get_tweets(twitter)
-    last_tweet = tweets[0]
-    logging.info("Last tweet was: %s" % last_tweet)
-    if 'Guess the word' in last_tweet:
-        try:
-            match_regex, related, hint_regex = get_hint_and_related(last_tweet)
- 
-            logging.debug("Hint Regex: %s" % hint_regex) 
-            logging.debug("Related Words: %s" % related) 
+def get_and_solve_tweet(tweet_text, solver):
+    
+    logging.info("Last tweet was: %s" % tweet_text)
+    if 'Guess the word' in tweet_text:
+        match_regex, related, hint_regex = get_hint_and_related(tweet_text)
 
-            answers =  solver.solve_problem(match_regex, related)
-            logging.info("Possible answers: %s" % answers)
-            if len(answers) > 0:
-                return answers[0][0]
-            else:
-                return None
-        except Exception as e:
-            print e
+        logging.debug("Hint Regex: %s" % hint_regex) 
+        logging.debug("Related Words: %s" % related) 
+
+        answers =  solver.solve_problem(match_regex, related)
+        logging.info("Possible answers: %s" % answers)
+        if len(answers) > 0:
+            return answers[0][0]
+        else:
+            return None
     else:
-        logging.info("No current Challenge: %s" % last_tweet)
+        logging.info("No current Challenge: %s" % tweet_text)
 
 def get_hint_and_related(tweet):
 
