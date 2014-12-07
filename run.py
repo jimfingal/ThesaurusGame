@@ -10,7 +10,7 @@ from twitterhelpers import get_twython, get_tweets, post_solution
 from thesaurus import get_thesaurus_text
 from solver import ThesaurusSolver
 
-SLEEP_MIN = os.environ.get('SOLVE_INTERVAL', 45)
+SLEEP_MIN = os.environ.get('SOLVE_INTERVAL', 50)
 
 log_fmt = "%(levelname)-6s %(filename)-12s:%(lineno)-4d at %(asctime)s: %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=log_fmt)
