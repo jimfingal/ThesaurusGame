@@ -1,5 +1,4 @@
 *.py[cod]
 .DS_Store
 .ipynb_checkpoints
-thesaurus.txt
 *.ipynb

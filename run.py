@@ -43,7 +43,6 @@ def solve_problem_and_post_solution(twitter, solver, commit):
 
     tweets = get_tweets(twitter)
 
-
     if not tweets:
         logging.error("No tweets returned!")
         return
